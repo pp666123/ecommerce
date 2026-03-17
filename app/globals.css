@@ -123,6 +123,13 @@
   body {
     @apply bg-background text-foreground;
   }
+  body[data-scroll-locked] {
+    /* 1. 強制歸零偏移 */
+    margin-right: 0 !important;
+
+    /* 2. 讓頁面在滾動條消失時，依然保留滾動條的空間 (防止抖動) */
+    scrollbar-gutter: stable;
+  }
   html {
     @apply font-sans;
   }
