@@ -9,12 +9,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useCartStore } from "@/store/useCartStore";
+import { toast } from "sonner";
 
 export default function CartCom() {
   const cartData = useCartStore((state) => state.cartData);
   const delCartData = useCartStore((state) => state.delCartData);
 
   const cartIsnull = cartData.length === 0;
+
+  const deleteClickHandler = (id: string, title: string) => {
+    toast.success("Item removed", {
+      description: `${title} has been removed from your cart.`,
+    });
+    delCartData(id);
+  };
 
   return (
     <DropdownMenu>
@@ -65,7 +73,7 @@ export default function CartCom() {
                         {/* 刪除按鈕 */}
                         <Trash2Icon
                           className="cursor-pointer text-slate-400"
-                          onClick={() => delCartData(id)}
+                          onClick={() => deleteClickHandler(id, title)}
                         />
                       </div>
                       {/* 送出按鈕 */}
