@@ -13,6 +13,8 @@ interface CartState {
   cartData: Cart[];
   postCartData: (data: Cart) => void;
   delCartData: (id: string) => void;
+  updateAmount: (id: string, amount: number) => void;
+  clearCartData: () => void;
 }
 
 export const useCartStore = create<CartState>((set) => ({
@@ -46,4 +48,5 @@ export const useCartStore = create<CartState>((set) => ({
         item.id === id ? { ...item, amount } : item,
       ),
     })),
+  clearCartData: () => set({ cartData: [] }),
 }));
