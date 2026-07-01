@@ -4,7 +4,7 @@ import { create } from "zustand";
 export type Cart = {
   id: string;
   title: string;
-  images: StaticImageData[];
+  images: (StaticImageData | string)[];
   price: number;
   amount: number;
 };
@@ -39,5 +39,11 @@ export const useCartStore = create<CartState>((set) => ({
     set((state) => ({
       // 留下所有 ID 「不等於」目標 ID 的商品
       cartData: state.cartData.filter((item) => item.id !== targetId),
+    })),
+  updateAmount: (id: string, amount: number) =>
+    set((state) => ({
+      cartData: state.cartData.map((item) =>
+        item.id === id ? { ...item, amount } : item,
+      ),
     })),
 }));

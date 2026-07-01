@@ -36,13 +36,17 @@ export default function RootLayout({
         <div className="flex flex-col w-full items-center justify-center bg-zinc-50 font-sans dark:bg-black">
           <div className="w-full">
             <Navbar />
+            {/* 如果你的 Navbar 已經加上了 border-b，這裡的 hr 也可以考慮移除讓畫面更乾淨 */}
             <div className="flex justify-center">
               <hr className="w-[95%]" />
             </div>
           </div>
-          <main className="flex min-h-full w-full flex-col items-center justify-between pt-0 md:pt-16 px-0 md:px-8 bg-white dark:bg-black sm:items-start">
+          
+          {/* 移除了 pt-0 md:pt-16，讓內容直接貼齊上方 */}
+          <main className="flex min-h-full w-full flex-col items-center justify-between px-0 md:px-8 bg-white dark:bg-black sm:items-start">
             {children}
           </main>
+          
         </div>
       </body>
     </html>

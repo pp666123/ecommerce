@@ -1,8 +1,7 @@
 "use client";
 import Image from "next/image";
-import { Trash2Icon } from "lucide-react";
+import { Trash2Icon, ShoppingCartIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ShoppingCartIcon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,6 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useCartStore } from "@/store/useCartStore";
 import { toast } from "sonner";
+import Link from "next/link";
 
 export default function CartCom() {
   const cartData = useCartStore((state) => state.cartData);
@@ -17,73 +17,115 @@ export default function CartCom() {
 
   const cartIsnull = cartData.length === 0;
 
+  const cartTotal = cartData.reduce(
+    (total, item) => total + item.price * item.amount,
+    0,
+  );
+
   const deleteClickHandler = (id: string, title: string) => {
-    toast.success("Item removed", {
-      description: `${title} has been removed from your cart.`,
+    toast.success("已移除商品", {
+      description: `${title} 已從購物車中移除。`,
     });
     delCartData(id);
   };
 
   return (
-    <DropdownMenu>
+    // 1. 加上 modal={false} 讓打開選單時背景依然可以滑動
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button className="cursor-pointer h-12" variant="ghost">
-          <ShoppingCartIcon className="size-[25px]" />
+        <Button
+          className="cursor-pointer h-12 w-12 relative rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+          variant="ghost"
+          size="icon"
+        >
+          <ShoppingCartIcon className="size-[25px] text-zinc-800 dark:text-zinc-200" />
+
+          {/* 2. 調整 Badge 位置 (top-1 right-1)，並加入 border 增加層次不擋 Icon */}
+          {!cartIsnull && (
+            <span className="absolute top-1 right-1 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-black dark:bg-white text-[10px] font-bold text-white dark:text-black border-2 border-white dark:border-zinc-950 shadow-sm">
+              {cartData.length}
+            </span>
+          )}
         </Button>
       </DropdownMenuTrigger>
+
       <DropdownMenuContent
         align="end"
-        className="w-[calc(100vw-2rem)] md:w-80"
+        className="w-[calc(100vw-2rem)] md:w-80 p-0 rounded-2xl border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden bg-white dark:bg-zinc-950"
         collisionPadding={16}
       >
-        <div>
-          <div className="text-lg p-4">Cart</div>
-          <hr />
-          <div className="flex min-h-40 p-4">
+        <div className="flex flex-col">
+          {/* 購物車標題 (極簡黑風格) */}
+          <div className="text-lg font-bold p-4 border-b border-zinc-100 dark:border-zinc-800/50 text-zinc-900 dark:text-zinc-100">
+            購物車
+          </div>
+
+          <div className="flex flex-col p-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
             {cartIsnull ? (
-              <div className="w-full flex justify-center items-center">
-                Your cart is empty.
+              <div className="w-full flex flex-col justify-center items-center py-10 text-zinc-400 dark:text-zinc-600">
+                <ShoppingCartIcon className="size-12 mb-3 opacity-20" />
+                <p className="font-medium text-sm">您的購物車是空的</p>
               </div>
             ) : (
-              <>
+              <div className="space-y-5">
                 {cartData.map((data) => {
                   const { title, images, price, amount, id } = data;
-                  const totle = price * amount;
+                  const total = price * amount;
                   return (
-                    <div className="w-full flex flex-col gap-4" key={id}>
-                      <div className="w-full flex justify-between items-center">
-                        <div className="flex gap-2">
-                          {/* 商品圖片 */}
+                    <div
+                      className="w-full flex justify-between items-center gap-3 group"
+                      key={id}
+                    >
+                      <div className="flex items-center gap-4 flex-1">
+                        {/* 商品圖片 */}
+                        <div className="relative h-14 w-14 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shrink-0">
                           <Image
-                            className="rounded-sm"
-                            height={50}
-                            width={50}
+                            className="object-cover"
+                            fill
                             src={images[0]}
-                            alt={"Store image"}
+                            alt={title}
                           />
-                          {/* 文字欄位 */}
-                          <div className="flex flex-col flex-2">
-                            <div className="text-slate-400">{title}</div>
-                            <div className="text-slate-400">
-                              {`$${price} x ${amount}`}{" "}
-                              <strong className="text-black">${totle}</strong>
-                            </div>
+                        </div>
+                        {/* 文字欄位 */}
+                        <div className="flex flex-col flex-1">
+                          <div className="text-zinc-900 dark:text-zinc-100 font-bold text-sm line-clamp-1 group-hover:text-black dark:group-hover:text-white transition-colors">
+                            {title}
+                          </div>
+                          <div className="text-zinc-500 dark:text-zinc-400 text-sm mt-0.5 flex items-center gap-1">
+                            <span>{`$${price} x ${amount}`}</span>
+                            <strong className="text-black dark:text-white text-base ml-auto">
+                              ${total}
+                            </strong>
                           </div>
                         </div>
-                        {/* 刪除按鈕 */}
-                        <Trash2Icon
-                          className="cursor-pointer text-slate-400"
-                          onClick={() => deleteClickHandler(id, title)}
-                        />
                       </div>
-                      {/* 送出按鈕 */}
-                      <Button className="w-full text-lg p-6">Checkout</Button>
+
+                      {/* 刪除按鈕 */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => deleteClickHandler(id, title)}
+                        className="text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 shrink-0 h-8 w-8 rounded-full transition-all"
+                      >
+                        <Trash2Icon className="size-4" />
+                      </Button>
                     </div>
                   );
                 })}
-              </>
+              </div>
             )}
           </div>
+
+          {/* 結帳按鈕 (高對比黑色系) */}
+          {!cartIsnull && (
+            <div className="p-4 border-t border-zinc-100 dark:border-zinc-800 mt-auto bg-zinc-50/50 dark:bg-zinc-900/20">
+              <Link href="/checkout" className="block w-full">
+                <Button className="w-full text-base font-bold h-12 rounded-xl bg-black hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-black shadow-lg shadow-black/10 transition-all">
+                  前往結帳 (${cartTotal})
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       </DropdownMenuContent>
     </DropdownMenu>
