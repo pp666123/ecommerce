@@ -1,6 +1,5 @@
 "use client";
 import Image from "next/image";
-import { Product } from "@/app/women/page"; // 請確保路徑正確指向你定義 Product 的檔案
 import { cn } from "@/lib/utils";
 
 import {
@@ -11,6 +10,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { useState } from "react";
+import { Product } from "@/app/product/[id]/page";
 
 // 改為接收 Product 型別
 export default function ImageContent({ images, thumbnail }: Product) {

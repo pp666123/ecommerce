@@ -5,7 +5,7 @@ import { QuantitySelector } from "@/components/ui/quantity-selector";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useCartStore } from "@/store/useCartStore";
-import { Product } from "@/app/women/page";
+import { Product } from "@/app/product/[id]/page";
 
 export default function TextContent(storeData: Product) {
   const { company, title, content, price, discount } = storeData;

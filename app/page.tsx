@@ -2,7 +2,20 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import Women from "./women/page";
+
+import product1Img from "@/assets/store/image-product-1.jpg";
+import product2Img from "@/assets/store/image-product-2.jpg";
+import product3Img from "@/assets/store/image-product-3.jpg";
+import product4Img from "@/assets/store/image-product-4.jpg";
+
+import product1tImg from "@/assets/store/image-product-1-thumbnail.jpg";
+import product2tImg from "@/assets/store/image-product-2-thumbnail.jpg";
+import product3tImg from "@/assets/store/image-product-3-thumbnail.jpg";
+import product4tImg from "@/assets/store/image-product-4-thumbnail.jpg";
+import ImageContent from "@/components/product/imageContent";
+import TextContent from "@/components/product/textContent";
+import { Product } from "./product/[id]/page";
+
 
 export default function Home() {
   const categories = [
@@ -66,6 +79,18 @@ export default function Home() {
         "https://images.unsplash.com/photo-1560769629-975ec94e6a86?auto=format&fit=crop&q=80&w=800",
     },
   ];
+
+  const productData: Product = {
+    id: "gyjhkljkl123",
+    images: [product1Img, product2Img, product3Img, product4Img],
+    thumbnail: [product1tImg, product2tImg, product3tImg, product4tImg],
+    company: "潮流鞋履公司",
+    title: "秋季限量版運動鞋",
+    content: `這款低筒運動鞋是你日常休閒穿搭的絕佳選擇。採用耐用的橡膠外底設計，能有效適應各種天氣狀況。`,
+    price: 125,
+    discount: 50,
+    amount: 0,
+  };
 
   return (
     <div className="w-full max-w-screen-2xl mx-auto px-4 md:px-0 lg:px-4 xl:px-16 pb-24 space-y-20 md:space-y-32 mt-6 md:mt-12 text-slate-900 dark:text-white">
@@ -135,7 +160,17 @@ export default function Home() {
         <h2 className="text-3xl font-bold tracking-tight mb-8 md:mb-12 text-center md:text-left">
           本月主打
         </h2>
-        <Women />
+        <div className="w-full flex flex-col md:flex-row items-center gap-12 lg:gap-24">
+          {/* 左側：圖片輪播 (限制最大寬度避免過度放大) */}
+          <div className="w-full flex-1 max-w-2xl">
+            <ImageContent {...productData} />
+          </div>
+
+          {/* 右側：文字與購買操作區 */}
+          <div className="w-full flex-1 flex flex-col justify-center px-4 md:px-0 max-w-xl">
+            <TextContent {...productData} />
+          </div>
+        </div>
       </section>
 
       {/* 4. New Arrivals (最新商品網格) */}
