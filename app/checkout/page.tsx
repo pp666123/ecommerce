@@ -88,7 +88,7 @@ export default function CheckoutPage() {
                   type="email" 
                   required
                   className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent outline-none transition-all" 
-                  placeholder="hello@example.com" 
+                  placeholder="hello@gmail.com" 
                 />
               </div>
             </section>

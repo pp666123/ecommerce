@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react"; // 1. 補上 useState 引入
 import Image from "next/image";
 import { Trash2Icon, ShoppingCartIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,9 @@ import { toast } from "sonner";
 import Link from "next/link";
 
 export default function CartCom() {
+  // 2. 建立控制選單開關的狀態
+  const [isOpen, setIsOpen] = useState(false);
+
   const cartData = useCartStore((state) => state.cartData);
   const delCartData = useCartStore((state) => state.delCartData);
 
@@ -30,8 +34,8 @@ export default function CartCom() {
   };
 
   return (
-    // 1. 加上 modal={false} 讓打開選單時背景依然可以滑動
-    <DropdownMenu modal={false}>
+    // 3. 綁定 open 與 onOpenChange 來手動控制選單
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen} modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
           className="cursor-pointer h-12 w-12 relative rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
@@ -40,7 +44,6 @@ export default function CartCom() {
         >
           <ShoppingCartIcon className="size-[25px] text-zinc-800 dark:text-zinc-200" />
 
-          {/* 2. 調整 Badge 位置 (top-1 right-1)，並加入 border 增加層次不擋 Icon */}
           {!cartIsnull && (
             <span className="absolute top-1 right-1 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-black dark:bg-white text-[10px] font-bold text-white dark:text-black border-2 border-white dark:border-zinc-950 shadow-sm">
               {cartData.length}
@@ -55,7 +58,6 @@ export default function CartCom() {
         collisionPadding={16}
       >
         <div className="flex flex-col">
-          {/* 購物車標題 (極簡黑風格) */}
           <div className="text-lg font-bold p-4 border-b border-zinc-100 dark:border-zinc-800/50 text-zinc-900 dark:text-zinc-100">
             購物車
           </div>
@@ -77,7 +79,6 @@ export default function CartCom() {
                       key={id}
                     >
                       <div className="flex items-center gap-4 flex-1">
-                        {/* 商品圖片 */}
                         <div className="relative h-14 w-14 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shrink-0">
                           <Image
                             className="object-cover"
@@ -86,7 +87,6 @@ export default function CartCom() {
                             alt={title}
                           />
                         </div>
-                        {/* 文字欄位 */}
                         <div className="flex flex-col flex-1">
                           <div className="text-zinc-900 dark:text-zinc-100 font-bold text-sm line-clamp-1 group-hover:text-black dark:group-hover:text-white transition-colors">
                             {title}
@@ -100,7 +100,6 @@ export default function CartCom() {
                         </div>
                       </div>
 
-                      {/* 刪除按鈕 */}
                       <Button
                         variant="ghost"
                         size="icon"
@@ -116,10 +115,14 @@ export default function CartCom() {
             )}
           </div>
 
-          {/* 結帳按鈕 (高對比黑色系) */}
           {!cartIsnull && (
             <div className="p-4 border-t border-zinc-100 dark:border-zinc-800 mt-auto bg-zinc-50/50 dark:bg-zinc-900/20">
-              <Link href="/checkout" className="block w-full">
+              {/* 4. 在 Link 加上 onClick 事件來關閉選單 */}
+              <Link 
+                href="/checkout" 
+                className="block w-full"
+                onClick={() => setIsOpen(false)}
+              >
                 <Button className="w-full text-base font-bold h-12 rounded-xl bg-black hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-black shadow-lg shadow-black/10 transition-all">
                   前往結帳 (${cartTotal})
                 </Button>
