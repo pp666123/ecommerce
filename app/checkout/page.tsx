@@ -19,7 +19,7 @@ export default function CheckoutPage() {
   const updateAmount = useCartStore((state) => state.updateAmount); 
 
   // 計算金額
-  const subtotal = cartData.reduce((total, item) => total + item.price * item.amount, 0);
+  const subtotal = cartData.reduce((total, item) => total + item.price * item.stock_amount, 0);
   const shippingFee = subtotal > 0 ? 15 : 0; 
   const orderTotal = subtotal + shippingFee;
 
@@ -43,19 +43,19 @@ export default function CheckoutPage() {
   };
 
   // 處理數量減少 (最低為 1)
-  const handleMinus = (id: string, currentAmount: number) => {
+  const handleMinus = (id: number, currentAmount: number) => {
     if (currentAmount > 1) {
       updateAmount(id, currentAmount - 1);
     }
   };
 
   // 處理數量增加
-  const handlePlus = (id: string, currentAmount: number) => {
+  const handlePlus = (id: number, currentAmount: number) => {
     updateAmount(id, currentAmount + 1);
   };
 
   // 處理刪除商品
-  const handleDelete = (id: string, title: string) => {
+  const handleDelete = (id: number, title: string) => {
     toast.success("已移除商品", { description: `${title} 已從結帳清單中移除。` });
     delCartData(id);
   };
@@ -168,7 +168,7 @@ export default function CheckoutPage() {
                   <div key={item.id} className="flex gap-4 items-start">
                     {/* 圖片 */}
                     <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-zinc-200 dark:bg-zinc-800 shrink-0 border border-zinc-200 dark:border-zinc-700">
-                      <Image src={item.images[0]} alt={item.title} fill className="object-cover" />
+                      <Image src={item.image_url[0]} alt={item.name} fill className="object-cover" />
                     </div>
                     
                     {/* 資訊與操作區 */}
@@ -176,11 +176,11 @@ export default function CheckoutPage() {
                       {/* 上半部：標題與價格 */}
                       <div className="flex justify-between items-start gap-2">
                         <div>
-                          <h4 className="text-sm font-bold text-zinc-900 dark:text-white line-clamp-2">{item.title}</h4>
+                          <h4 className="text-sm font-bold text-zinc-900 dark:text-white line-clamp-2">{item.name}</h4>
                           <p className="text-sm text-zinc-500 mt-1">${item.price}</p>
                         </div>
                         <div className="font-bold text-zinc-900 dark:text-white shrink-0">
-                          ${item.price * item.amount}
+                          ${item.price * item.stock_amount}
                         </div>
                       </div>
                       
@@ -189,16 +189,16 @@ export default function CheckoutPage() {
                         <div className="flex items-center border border-zinc-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-900">
                           <button 
                             type="button"
-                            onClick={() => handleMinus(item.id, item.amount)}
-                            disabled={item.amount <= 1}
+                            onClick={() => handleMinus(item.id, item.stock_amount)}
+                            disabled={item.stock_amount <= 1}
                             className="p-1.5 text-zinc-500 hover:text-black dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                           >
                             <Minus size={14} />
                           </button>
-                          <span className="w-8 text-center text-sm font-bold">{item.amount}</span>
+                          <span className="w-8 text-center text-sm font-bold">{item.stock_amount}</span>
                           <button 
                             type="button"
-                            onClick={() => handlePlus(item.id, item.amount)}
+                            onClick={() => handlePlus(item.id, item.stock_amount)}
                             className="p-1.5 text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
                           >
                             <Plus size={14} />
@@ -207,7 +207,7 @@ export default function CheckoutPage() {
                         
                         <button 
                           type="button"
-                          onClick={() => handleDelete(item.id, item.title)}
+                          onClick={() => handleDelete(item.id, item.name)}
                           className="text-zinc-400 hover:text-red-500 p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                         >
                           <Trash2 size={16} />

@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Filter, ShoppingCartIcon } from "lucide-react";
+import { Product } from "@/services/api";
 
 export type ProductItem = {
   id: number;
@@ -23,7 +24,7 @@ export type Title = {
 
 interface ProductGridProps {
   title: Title;
-  products: ProductItem[];
+  products: Product[];
 }
 
 export default function ProductGrid({ products, title }: ProductGridProps) {
@@ -96,14 +97,14 @@ export default function ProductGrid({ products, title }: ProductGridProps) {
               className="block relative aspect-[4/5] bg-slate-100 dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm transition-all group-hover:shadow-xl group-hover:shadow-orange-500/20 group-hover:ring-4 group-hover:ring-orange-500 ring-offset-2 dark:ring-offset-slate-950"
             >
               <Image
-                src={product.image}
+                src={product.image_url[0]}
                 alt={product.name}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
               />
 
               {/* 新品標籤 */}
-              {product.isNew && (
+              {product.is_new && (
                 <div className="absolute top-4 left-4 z-10 bg-orange-100 text-orange-500 font-bold px-3 py-1 rounded-full text-xs tracking-wider shadow-sm">
                   NEW
                 </div>

@@ -22,11 +22,11 @@ export default function CartCom() {
   const cartIsnull = cartData.length === 0;
 
   const cartTotal = cartData.reduce(
-    (total, item) => total + item.price * item.amount,
+    (total, item) => total + item.price * item.stock_amount,
     0,
   );
 
-  const deleteClickHandler = (id: string, title: string) => {
+  const deleteClickHandler = (id: number, title: string) => {
     toast.success("已移除商品", {
       description: `${title} 已從購物車中移除。`,
     });
@@ -71,8 +71,8 @@ export default function CartCom() {
             ) : (
               <div className="space-y-5">
                 {cartData.map((data) => {
-                  const { title, images, price, amount, id } = data;
-                  const total = price * amount;
+                  const { name, image_url, price, stock_amount, id } = data;
+                  const total = price * stock_amount;
                   return (
                     <div
                       className="w-full flex justify-between items-center gap-3 group"
@@ -83,16 +83,16 @@ export default function CartCom() {
                           <Image
                             className="object-cover"
                             fill
-                            src={images[0]}
-                            alt={title}
+                            src={image_url[0]}
+                            alt={name}
                           />
                         </div>
                         <div className="flex flex-col flex-1">
                           <div className="text-zinc-900 dark:text-zinc-100 font-bold text-sm line-clamp-1 group-hover:text-black dark:group-hover:text-white transition-colors">
-                            {title}
+                            {name}
                           </div>
                           <div className="text-zinc-500 dark:text-zinc-400 text-sm mt-0.5 flex items-center gap-1">
-                            <span>{`$${price} x ${amount}`}</span>
+                            <span>{`$${price} x ${stock_amount}`}</span>
                             <strong className="text-black dark:text-white text-base ml-auto">
                               ${total}
                             </strong>
@@ -103,7 +103,7 @@ export default function CartCom() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => deleteClickHandler(id, title)}
+                        onClick={() => deleteClickHandler(id, name)}
                         className="text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 shrink-0 h-8 w-8 rounded-full transition-all"
                       >
                         <Trash2Icon className="size-4" />
@@ -118,8 +118,8 @@ export default function CartCom() {
           {!cartIsnull && (
             <div className="p-4 border-t border-zinc-100 dark:border-zinc-800 mt-auto bg-zinc-50/50 dark:bg-zinc-900/20">
               {/* 4. 在 Link 加上 onClick 事件來關閉選單 */}
-              <Link 
-                href="/checkout" 
+              <Link
+                href="/checkout"
                 className="block w-full"
                 onClick={() => setIsOpen(false)}
               >

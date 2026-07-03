@@ -5,10 +5,10 @@ import { QuantitySelector } from "@/components/ui/quantity-selector";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useCartStore } from "@/store/useCartStore";
-import { Product } from "@/app/product/[id]/page";
+import { Product } from "@/services/api";
 
-export default function TextContent(storeData: Product) {
-  const { company, title, content, price, discount } = storeData;
+export default function TextContent(product: Product) {
+  const { company, name, description, price, discount } = product;
   const [count, setCount] = useState(1);
   const postCartData = useCartStore((state) => state.postCartData);
 
@@ -22,10 +22,10 @@ export default function TextContent(storeData: Product) {
 
     // 中文成功通知
     toast.success("已加入購物車", {
-      description: `${count} × ${title} 已成功加入您的清單。`,
+      description: `${count} × ${name} 已成功加入您的清單。`,
     });
 
-    postCartData({ ...storeData, amount: count });
+    postCartData({ ...product, stock_amount: count });
     // setCount(0);
   };
 
@@ -37,25 +37,29 @@ export default function TextContent(storeData: Product) {
           {company}
         </div>
         <h1 className="text-5xl font-bold leading-tight text-slate-900">
-          {title}
+          {name}
         </h1>
       </div>
 
       {/* 3. 描述文字 */}
-      <p className="text-slate-500 leading-relaxed text-base">{content}</p>
+      <p className="text-slate-500 leading-relaxed text-base">{description}</p>
 
       {/* 4. 價格區域 */}
       <div className="flex lg:flex-col items-center lg:items-start justify-between lg:justify-start gap-2">
         <div className="flex items-center gap-4">
-          <div className="text-3xl font-bold">${price.toFixed(2)}</div>
-          <span className="bg-orange-100 text-orange-500 font-bold px-2 py-0.5 rounded-md text-sm">
-            {discount}% OFF
-          </span>
+          <div className="text-3xl font-bold">${Number(price).toFixed(2)}</div>
+          {discount > 0 && (
+            <span className="bg-orange-100 text-orange-500 font-bold px-2 py-0.5 rounded-md text-sm">
+              {discount}% OFF
+            </span>
+          )}
         </div>
         {/* 原價 */}
-        <del className="text-slate-400 font-bold ml-auto lg:ml-0">
-          ${((price / discount) * 100).toFixed(2)}
-        </del>
+        {discount > 0 && (
+          <del className="text-slate-400 font-bold ml-auto lg:ml-0">
+            ${((price / discount) * 100).toFixed(2)}
+          </del>
+        )}
       </div>
 
       {/* 5. 按鈕區域 */}

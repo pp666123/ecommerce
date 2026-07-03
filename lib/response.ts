@@ -46,15 +46,30 @@ export const STATUS_MAP: Record<ErrorCode, number> = {
 };
 
 // 成功回應
-export function ok<T>(data: T, status = 200) {
-  return NextResponse.json({ success: true, data }, { status });
+export function ok<T>({
+  data,
+  message,
+  status = 200,
+}: {
+  data?: T;
+  message?: string;
+  status?: number;
+}) {
+  return NextResponse.json(
+    {
+      success: true,
+      data, // 這裡拿到的就是你傳進來的 data 內容
+      ...(message && { message }),
+    },
+    { status },
+  );
 }
 
 // 失敗回應
 export function fail(code: ErrorCode | number, message: string) {
   // 如果是數字就直接用，如果是字串就查表
-  const statusCode = typeof code === "number" ? code : (STATUS_MAP[code] || 500);
-  
+  const statusCode = typeof code === "number" ? code : STATUS_MAP[code] || 500;
+
   // 決定回傳給前端的錯誤代碼標籤
   const errorCodeStr = typeof code === "string" ? code : "API_ERROR";
 

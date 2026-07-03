@@ -1,19 +1,11 @@
-import { StaticImageData } from "next/image";
+import { Product } from "@/services/api";
 import { create } from "zustand";
 
-export type Cart = {
-  id: string;
-  title: string;
-  images: (StaticImageData | string)[];
-  price: number;
-  amount: number;
-};
-
 interface CartState {
-  cartData: Cart[];
-  postCartData: (data: Cart) => void;
-  delCartData: (id: string) => void;
-  updateAmount: (id: string, amount: number) => void;
+  cartData: Product[];
+  postCartData: (data: Product) => void;
+  delCartData: (id: number) => void;
+  updateAmount: (id: number, amount: number) => void;
   clearCartData: () => void;
 }
 
@@ -29,7 +21,7 @@ export const useCartStore = create<CartState>((set) => ({
         return {
           cartData: state.cartData.map((item) =>
             item.id === newItem.id
-              ? { ...item, amount: item.amount + newItem.amount }
+              ? { ...item, amount: item.stock_amount + newItem.stock_amount }
               : item,
           ),
         };
@@ -42,7 +34,7 @@ export const useCartStore = create<CartState>((set) => ({
       // 留下所有 ID 「不等於」目標 ID 的商品
       cartData: state.cartData.filter((item) => item.id !== targetId),
     })),
-  updateAmount: (id: string, amount: number) =>
+  updateAmount: (id, amount) =>
     set((state) => ({
       cartData: state.cartData.map((item) =>
         item.id === id ? { ...item, amount } : item,

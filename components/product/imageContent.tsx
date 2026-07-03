@@ -10,10 +10,11 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { useState } from "react";
-import { Product } from "@/app/product/[id]/page";
+import { Product } from "@/services/api";
 
 // 改為接收 Product 型別
-export default function ImageContent({ images, thumbnail }: Product) {
+export default function ImageContent(product: Product) {
+  const { image_url, thumbnail_url } = product;
   const [select, setSelect] = useState(0);
 
   return (
@@ -21,10 +22,11 @@ export default function ImageContent({ images, thumbnail }: Product) {
       {/* 電腦版 */}
       <div className="flex flex-col items-center w-full max-w-[550px] mx-auto px-4 md:px-0 max-md:hidden">
         {/* 主圖容器 */}
-        <div className="w-full relative aspect-square">
+        <div className="w-full relative aspect-square rounded-2xl overflow-hidden group">
           <Image
-            className="rounded-2xl object-cover"
-            src={images[select]}
+            // 🔥 2. 圖片加上 transition、duration 與 group-hover:scale-105
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            src={image_url[select]}
             alt="主商品圖片"
             fill
             priority
@@ -33,7 +35,7 @@ export default function ImageContent({ images, thumbnail }: Product) {
 
         {/* 縮圖列 */}
         <div className="w-full flex justify-between gap-4 py-8">
-          {thumbnail.map((item, index) => {
+          {thumbnail_url.map((item, index) => {
             const isSelected = select === index;
             return (
               <div
@@ -41,7 +43,7 @@ export default function ImageContent({ images, thumbnail }: Product) {
                 className={cn(
                   "relative aspect-square w-[22%] cursor-pointer rounded-lg overflow-hidden transition-all duration-300",
                   // 核心：若被選中，則顯示橘色邊框，若未選中，則給予輕微透明度
-                  isSelected ? "ring-2 ring-orange-500" : "hover:opacity-70"
+                  isSelected ? "ring-2 ring-orange-500" : "hover:opacity-70",
                 )}
                 onClick={() => setSelect(index)}
               >
@@ -55,7 +57,7 @@ export default function ImageContent({ images, thumbnail }: Product) {
                 <div
                   className={cn(
                     "absolute inset-0 bg-white transition-opacity duration-300",
-                    isSelected ? "opacity-50" : "opacity-0 hover:opacity-30"
+                    isSelected ? "opacity-50" : "opacity-0 hover:opacity-30",
                   )}
                 />
               </div>
@@ -68,7 +70,7 @@ export default function ImageContent({ images, thumbnail }: Product) {
       <div className="md:hidden pb-12 md:p-0">
         <Carousel className="w-full">
           <CarouselContent>
-            {images.map((image, index) => (
+            {image_url.map((image, index) => (
               <CarouselItem key={index}>
                 <div className="relative aspect-square w-full">
                   <Image

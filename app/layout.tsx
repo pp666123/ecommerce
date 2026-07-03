@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import Navbar from "@/components/navbar";
 import { Toaster } from "@/components/ui/sonner";
+import Providers from "./providers";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -41,12 +42,11 @@ export default function RootLayout({
               <hr className="w-[95%]" />
             </div>
           </div>
-          
+
           {/* 移除了 pt-0 md:pt-16，讓內容直接貼齊上方 */}
           <main className="flex min-h-full w-full flex-col items-center justify-between px-0 md:px-8 bg-white dark:bg-black sm:items-start">
-            {children}
+            <Providers>{children}</Providers>
           </main>
-          
         </div>
       </body>
     </html>

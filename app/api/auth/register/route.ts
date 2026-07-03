@@ -86,7 +86,7 @@ export async function POST(req: Request) {
       [username, email, passwordHash, verificationToken, tokenExpiresAt],
     );
 
-    return ok({ message: "註冊成功，請至信箱點擊驗證連結" }, 201);
+    return ok({ message: "註冊成功，請至信箱點擊驗證連結", status: 201 });
   } catch (error) {
     console.error("Register API Error:", error);
     // 這裡若是發信失敗，使用者會收到伺服器錯誤，DB 則完全沒寫入

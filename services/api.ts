@@ -1,6 +1,6 @@
-export interface ApiResponse<T = unknown> {
+interface ApiResponse<T> {
   success: boolean;
-  data?: T;
+  data: T;
   error?: {
     code: string;
     message: string;
@@ -61,6 +61,46 @@ export interface UserProfile {
   email: string;
 }
 
+export interface ProductUpdate {
+  name: string;
+  company: string;
+  category: string;
+  price: number;
+  discount: number;
+  description: string;
+  image_url: string[];
+  thumbnail_url: string[];
+  stock_amount: number;
+  is_featured: boolean;
+  is_new?: boolean;
+}
+
+export interface Product {
+  id: number;
+  name: string;
+  company: string | null;
+  category: string | null;
+  price: number;
+  discount: number;
+  description: string | null;
+  image_url: string[];
+  thumbnail_url: string[];
+  stock_amount: number;
+  is_featured: boolean;
+  created_at: Date;
+  is_new?: boolean;
+}
+
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  image_url: string;
+  sub_name?: string;
+  description?: string;
+  created_at?: string;
+}
+
 // ==========================================
 // 模組化匯出各個領域的 API
 // ==========================================
@@ -109,5 +149,66 @@ export const authApi = {
     fetcher<{ message?: string }>("/api/auth/google", {
       method: "POST",
       body: JSON.stringify(data),
+    }),
+};
+
+export const productApi = {
+  // 🔥 新增：獲取產品列表 (支援查詢參數，例如 limit 或 featured)
+  getAll: (params?: {
+    limit?: number;
+    featured?: boolean;
+    category?: string;
+  }) => {
+    const queryString = params
+      ? new URLSearchParams(
+          Object.entries(params)
+            .filter(([_, v]) => v !== undefined)
+            .map(([k, v]) => [k, String(v)]),
+        ).toString()
+      : "";
+
+    return fetcher<Product[]>(
+      `/api/products${queryString ? `?${queryString}` : ""}`,
+      {
+        method: "GET",
+      },
+    );
+  },
+
+  // 🔥 新增：獲取單一產品詳情
+  getById: (id: number) =>
+    fetcher<Product>(`/api/products/${id}`, {
+      method: "GET",
+    }),
+
+  create: (data: ProductUpdate) =>
+    fetcher<{ id: number }>("/api/products", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  update: (id: number, data: ProductUpdate) =>
+    fetcher<{ message: string }>(`/api/products/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  delete: (id: number) =>
+    fetcher<{ message: string }>(`/api/products/${id}`, {
+      method: "DELETE",
+    }),
+};
+
+export const categoryApi = {
+  // 將 any[] 替換為 Category[]
+  getAll: () =>
+    fetcher<Category[]>("/api/categories", {
+      method: "GET",
+    }),
+
+  // 🔥 新增：透過 slug 取得單一分類的所有欄位 (包含圖片與文案)
+  getBySlug: (slug: string) =>
+    fetcher<Category>(`/api/categories/${encodeURIComponent(slug)}`, {
+      method: "GET",
     }),
 };

@@ -15,9 +15,11 @@ export async function GET() {
 
     // 回傳使用者資訊
     return ok({
-      id: payload.id,
-      username: payload.username,
-      email: payload.email,
+      data: {
+        id: payload.id,
+        username: payload.username,
+        email: payload.email,
+      },
     });
   } catch (error) {
     return fail("UNAUTHORIZED", "憑證無效或已過期");

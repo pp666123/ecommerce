@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+// src/app/api/verify/route.ts (假設的路徑)
+import { ok, fail } from "@/lib/response";
 import pool from "@/lib/db";
 
 export async function GET(req: Request) {
@@ -8,7 +9,8 @@ export async function GET(req: Request) {
     const token = searchParams.get("token");
 
     if (!token) {
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/login?error=無效的驗證連結`);
+      // 找不到 Token 時，回傳錯誤狀態
+      return fail("BAD_REQUEST", "無效的驗證連結");
     }
 
     // 在資料庫中尋找符合且未過期的 token
@@ -19,7 +21,7 @@ export async function GET(req: Request) {
 
     if (result.rows.length === 0) {
       // 找不到或已過期
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/login?error=驗證連結無效或已過期`);
+      return fail("UNAUTHORIZED", "驗證連結無效或已過期");
     }
 
     const userId = result.rows[0].id;
@@ -32,10 +34,10 @@ export async function GET(req: Request) {
       [userId]
     );
 
-    // 驗證成功，導向登入頁並帶上 success 參數
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/login?verified=true`);
+    // 驗證成功，回傳成功 JSON
+    return ok({ message: "驗證成功，請重新登入" });
   } catch (error) {
     console.error("Verify API Error:", error);
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/login?error=伺服器錯誤`);
+    return fail("INTERNAL_ERROR", "伺服器發生錯誤");
   }
 }
