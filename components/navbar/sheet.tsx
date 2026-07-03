@@ -1,6 +1,6 @@
 import { MenuIcon, X } from "lucide-react";
 import {
-  Sheet,
+  Sheet as SheetComponent,
   SheetClose,
   SheetContent,
   SheetHeader,
@@ -8,10 +8,10 @@ import {
 } from "@/components/ui/sheet";
 import NavigationCom from "./navigation";
 
-export default function SheetCom() {
+export default function Sheet() {
   return (
     <div className="flex items-center gap-6 md:hidden">
-      <Sheet>
+      <SheetComponent>
         {/* 1. 移除 asChild，直接將原本 Button 的樣式寫在 SheetTrigger 上 */}
         <SheetTrigger className="inline-flex items-center justify-center rounded-md h-10 w-10 hover:bg-accent hover:text-accent-foreground transition-colors focus:outline-none">
           <MenuIcon className="size-[25px]" />
@@ -32,7 +32,7 @@ export default function SheetCom() {
             </div>
           </SheetHeader>
         </SheetContent>
-      </Sheet>
+      </SheetComponent>
     </div>
   );
 }

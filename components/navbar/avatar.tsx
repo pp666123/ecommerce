@@ -14,30 +14,33 @@ import { User, LogOut, Settings, Package, LogIn, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import avatarImg from "@/assets/image-avatar.png";
-import { authApi, UserProfile } from "@/services/api";
+import { authApi } from "@/services/api";
 import { useAuthStore } from "@/store/useAuthStore";
 
 export default function AvatarCom() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false); // 處理 Hydration
 
   const { user, setUser, checkAuth } = useAuthStore();
-  const isLoggedIn = !!user;
 
+  // 元件掛載後檢查驗證狀態
   useEffect(() => {
-    checkAuth();
+    const timeoutId = setTimeout(() => {
+      setIsMounted(true);
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
   }, [checkAuth]);
 
-  // 真實登出邏輯
   const handleLogout = async () => {
     try {
-      await authApi.logout(); // 呼叫 API 清除 HttpOnly Cookie
-      setUser(null); // 清除前端狀態
+      await authApi.logout();
+      setUser(null);
       setIsOpen(false);
       toast.success("已成功登出", { description: "期待您再次光臨。" });
-
       router.push("/login");
-      router.refresh(); // 強制刷新畫面，確保所有 Server Component 更新狀態
+      router.refresh();
     } catch (error) {
       toast.error("登出失敗，請稍後再試");
     }
@@ -48,6 +51,15 @@ export default function AvatarCom() {
     router.push(path);
   };
 
+  // 確保在伺服器端渲染時不產生不一致的 UI
+  if (!isMounted) {
+    return (
+      <div className="h-12 w-12 rounded-full bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
+    );
+  }
+
+  const isLoggedIn = !!user;
+
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen} modal={false}>
       <DropdownMenuTrigger asChild>
@@ -56,14 +68,12 @@ export default function AvatarCom() {
           variant="ghost"
           size="icon"
         >
-          <Avatar className="h-8 w-8 border border-zinc-200 dark:border-zinc-700 transition-all">
-            {/* 1. 永遠存在，但 src 條件給予 */}
+          <Avatar className="h-8 w-8 border border-zinc-200 dark:border-zinc-700">
             <AvatarImage
               src={isLoggedIn ? avatarImg.src : undefined}
               alt="會員頭像"
               className="object-cover"
             />
-            {/* 2. 永遠存在，當上方 src 為 undefined 時，會自動顯示這個 Fallback */}
             <AvatarFallback className="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
               <User size={18} />
             </AvatarFallback>
@@ -77,11 +87,10 @@ export default function AvatarCom() {
         collisionPadding={16}
       >
         <div className="flex flex-col">
-          {isLoggedIn ? (
-            // ================= 已登入狀態選單 =================
+          {isLoggedIn && user ? (
+            // ================= 已登入狀態 =================
             <>
               <div className="p-4 border-b border-zinc-100 dark:border-zinc-800/50 flex flex-col bg-zinc-50/50 dark:bg-zinc-900/20">
-                {/* 🔥 動態顯示真實名稱與信箱 */}
                 <span className="font-bold text-base text-zinc-900 dark:text-zinc-100">
                   {user.username}
                 </span>
@@ -89,34 +98,9 @@ export default function AvatarCom() {
                   {user.email}
                 </span>
               </div>
-
-              <div className="p-2 space-y-1">
-                {/* <DropdownMenuItem
-                  className="cursor-pointer rounded-xl py-3 px-3 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 focus:bg-zinc-100 dark:focus:bg-zinc-800/50 transition-colors flex items-center"
-                  onClick={() => handleNavigation("/orders")}
-                >
-                  <Package className="mr-3 h-4 w-4 text-zinc-500 dark:text-zinc-400" />
-                  <span className="font-medium text-sm text-zinc-900 dark:text-zinc-100">
-                    我的訂單
-                  </span>
-                </DropdownMenuItem> */}
-
-                {/* <DropdownMenuItem
-                  className="cursor-pointer rounded-xl py-3 px-3 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 focus:bg-zinc-100 dark:focus:bg-zinc-800/50 transition-colors flex items-center"
-                  onClick={() => handleNavigation("/settings")}
-                >
-                  <Settings className="mr-3 h-4 w-4 text-zinc-500 dark:text-zinc-400" />
-                  <span className="font-medium text-sm text-zinc-900 dark:text-zinc-100">
-                    帳號設定
-                  </span>
-                </DropdownMenuItem> */}
-              </div>
-
-              <DropdownMenuSeparator className="bg-zinc-100 dark:bg-zinc-800/50 m-0" />
-
               <div className="p-2">
                 <DropdownMenuItem
-                  className="cursor-pointer rounded-xl py-3 px-3 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 focus:bg-red-50 dark:focus:bg-red-950/30 transition-colors flex items-center"
+                  className="cursor-pointer rounded-xl py-3 px-3 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors flex items-center"
                   onClick={handleLogout}
                 >
                   <LogOut className="mr-3 h-4 w-4" />
@@ -125,7 +109,7 @@ export default function AvatarCom() {
               </div>
             </>
           ) : (
-            // ================= 未登入狀態選單 =================
+            // ================= 未登入狀態 =================
             <>
               <div className="p-4 border-b border-zinc-100 dark:border-zinc-800/50 flex flex-col bg-zinc-50/50 dark:bg-zinc-900/20">
                 <span className="font-bold text-base text-zinc-900 dark:text-zinc-100">
@@ -135,26 +119,20 @@ export default function AvatarCom() {
                   登入以享受專屬會員服務
                 </span>
               </div>
-
               <div className="p-2 space-y-1">
                 <DropdownMenuItem
-                  className="cursor-pointer rounded-xl py-3 px-3 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 focus:bg-zinc-100 dark:focus:bg-zinc-800/50 transition-colors flex items-center"
+                  className="cursor-pointer rounded-xl py-3 px-3 transition-colors flex items-center"
                   onClick={() => handleNavigation("/login")}
                 >
-                  <LogIn className="mr-3 h-4 w-4 text-zinc-500 dark:text-zinc-400" />
-                  <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100">
-                    會員登入
-                  </span>
+                  <LogIn className="mr-3 h-4 w-4" />
+                  <span className="font-bold text-sm">會員登入</span>
                 </DropdownMenuItem>
-
                 <DropdownMenuItem
-                  className="cursor-pointer rounded-xl py-3 px-3 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 focus:bg-zinc-100 dark:focus:bg-zinc-800/50 transition-colors flex items-center"
+                  className="cursor-pointer rounded-xl py-3 px-3 transition-colors flex items-center"
                   onClick={() => handleNavigation("/register")}
                 >
-                  <UserPlus className="mr-3 h-4 w-4 text-zinc-500 dark:text-zinc-400" />
-                  <span className="font-medium text-sm text-zinc-900 dark:text-zinc-100">
-                    立即註冊
-                  </span>
+                  <UserPlus className="mr-3 h-4 w-4" />
+                  <span className="font-medium text-sm">立即註冊</span>
                 </DropdownMenuItem>
               </div>
             </>

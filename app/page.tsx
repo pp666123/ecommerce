@@ -1,171 +1,89 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-
 import ImageContent from "@/components/product/imageContent";
 import TextContent from "@/components/product/textContent";
 
-import {
-  useCategories,
-  useFeaturedProduct,
-  useNewArrivals,
-} from "@/hooks/useProducts";
+// 🔥 直接引入 API 函式，移除所有 hooks
+import { productApi, categoryApi } from "@/services/api";
 
-// 定義一張全站通用的「沒有圖片時的佔位圖」
-const PLACEHOLDER_IMAGE =
-  "https://images.unsplash.com/photo-1560393464-5c69a73c5770?auto=format&fit=crop&q=80&w=800";
+const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1560393464-5c69a73c5770?auto=format&fit=crop&q=80&w=800";
 
-
-export default function Home() {
-  // 取得 API 資料
-  const { data: featured, isLoading: fLoading } = useFeaturedProduct();
-  const { data: arrivals, isLoading: aLoading } = useNewArrivals();
-  const { data: categories, isLoading: cLoading } = useCategories();
+export default async function Home() {
+  // 1. 同時並行獲取所有首頁需要的資料
+  const [categories, featured, arrivals] = await Promise.all([
+    categoryApi.getAll(),
+    productApi.getAll({ featured: true, limit: 1 }), // 假設 API 支援這些參數
+    productApi.getAll({ limit: 4 }), // 新品列表
+  ]);
 
   return (
     <div className="w-full max-w-screen-2xl mx-auto px-4 md:px-0 lg:px-4 xl:px-16 pb-24 space-y-20 md:space-y-32 mt-6 md:mt-12 text-slate-900 dark:text-white">
-      {/* 1. Hero Section (主視覺橫幅) */}
-      <section className="relative w-full h-[60vh] min-h-[400px] md:h-[70vh] bg-slate-900 rounded-[2rem] overflow-hidden flex items-center justify-center sm:justify-start px-8 sm:px-16 lg:px-24 shadow-2xl shadow-slate-200 dark:shadow-none">
+      {/* 1. Hero Section */}
+      <section className="relative w-full h-[60vh] min-h-[400px] md:h-[70vh] bg-slate-900 rounded-[2rem] overflow-hidden flex items-center justify-center sm:justify-start px-8 sm:px-16 lg:px-24 shadow-2xl">
         <Image
           src="https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&q=80&w=2071"
           alt="秋季時尚主視覺"
           fill
           className="object-cover opacity-60"
           priority
+          sizes="100vw"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 to-transparent" />
-
         <div className="relative z-10 max-w-xl space-y-6 text-center sm:text-left text-white">
-          <div className="text-orange-500 font-bold uppercase tracking-widest text-sm mb-2">
-            New Arrival
-          </div>
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight">
-            2026 <br className="hidden sm:block" /> 秋季全新系列
-          </h1>
-          <p className="text-lg md:text-xl text-slate-300 leading-relaxed">
-            探索最新時尚潮流。專為舒適而生，為品味而打造。
-          </p>
-          <Button
-            className="h-14 px-8 bg-orange-500 hover:bg-orange-400 text-white font-bold rounded-xl shadow-xl shadow-orange-500/30 transition-all text-lg mt-4"
-            asChild
-          >
-            <Link href="/collections">
-              立即選購 <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
+          <div className="text-orange-500 font-bold uppercase tracking-widest text-sm mb-2">New Arrival</div>
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight">2026 <br /> 秋季全新系列</h1>
+          <Button className="h-14 px-8 bg-orange-500 hover:bg-orange-400 text-white font-bold rounded-xl shadow-xl shadow-orange-500/30 transition-all text-lg mt-4" asChild>
+            <Link href="/collections">立即選購 <ArrowRight className="ml-2 h-5 w-5" /></Link>
           </Button>
         </div>
       </section>
 
-      {/* 2. Categories (快速分類區塊) */}
+      {/* 2. Categories */}
       <section className="space-y-8 px-4 md:px-8">
-        <div className="flex items-center justify-between">
-          <h2 className="text-3xl font-bold tracking-tight">精選分類</h2>
-        </div>
+        <h2 className="text-3xl font-bold tracking-tight">精選分類</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-          {cLoading
-            ? // 分類骨架屏載入狀態
-              Array.from({ length: 4 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-2xl animate-pulse"
-                />
-              ))
-            : // 實際資料渲染 (防呆：確保 image_url 有值，否則給佔位圖)
-              (categories || [])?.map((category) => (
-                <Link
-                  key={category.slug}
-                  href={`/collections/${category.slug}`}
-                  className="group relative aspect-square bg-slate-100 dark:bg-slate-800 rounded-2xl overflow-hidden flex items-center justify-center transition-all hover:ring-4 hover:ring-orange-500 ring-offset-2 dark:ring-offset-slate-950"
-                >
-                  <Image
-                    src={category.image_url || PLACEHOLDER_IMAGE}
-                    alt={category.name || "分類圖片"}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-slate-900/30 group-hover:bg-slate-900/40 transition-colors z-10" />
-                  <span className="text-xl md:text-3xl font-bold text-white z-20 tracking-wider drop-shadow-md">
-                    {category.name}
-                  </span>
-                </Link>
-              ))}
+          {categories?.map((category) => (
+            <Link key={category.slug} href={`/collections/${category.slug}`} className="group relative aspect-square bg-slate-100 rounded-2xl overflow-hidden flex items-center justify-center">
+              <Image src={category.image_url || PLACEHOLDER_IMAGE} alt={category.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 50vw, 25vw" />
+              <div className="absolute inset-0 bg-slate-900/30 group-hover:bg-slate-900/40 transition-colors z-10" />
+              <span className="text-xl md:text-3xl font-bold text-white z-20 drop-shadow-md">{category.name}</span>
+            </Link>
+          ))}
         </div>
       </section>
 
-      {/* 3. Featured Product (本月主打區塊) */}
-      <section className="px-4 md:px-8">
-        <h2 className="text-3xl font-bold tracking-tight mb-8 md:mb-12 text-center md:text-left">
-          本月主打
-        </h2>
-        {fLoading ? (
-          <div className="h-60 animate-pulse bg-slate-100 dark:bg-slate-800 rounded-3xl" />
-        ) : featured ? (
+      {/* 3. Featured Product */}
+      {featured?.[0] && (
+        <section className="px-4 md:px-8">
+          <h2 className="text-3xl font-bold tracking-tight mb-8 text-center md:text-left">本月主打</h2>
           <div className="w-full flex flex-col md:flex-row items-center gap-12">
-            <div className="w-full flex-1 max-w-2xl">
-              <ImageContent {...featured[0]} />
-            </div>
-            <div className="w-full flex-1 max-w-xl">
-              <TextContent {...featured[0]} />
-            </div>
+            <div className="w-full flex-1 max-w-2xl"><ImageContent {...featured[0]} /></div>
+            <div className="w-full flex-1 max-w-xl"><TextContent {...featured[0]} /></div>
           </div>
-        ) : null}
-      </section>
+        </section>
+      )}
 
-      {/* 4. New Arrivals (新品上市網格) */}
+      {/* 4. New Arrivals */}
       <section className="space-y-8 px-4 md:px-8">
         <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold tracking-tight">新品上市</h2>
-          <Button
-            variant="ghost"
-            className="text-orange-500 hover:text-orange-600 hover:bg-orange-50 font-bold"
-            asChild
-          >
-            <Link href="/collections">查看全部</Link>
-          </Button>
+          <Button variant="ghost" className="text-orange-500 hover:text-orange-600 font-bold" asChild><Link href="/collections">查看全部</Link></Button>
         </div>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-          {aLoading
-            ? // 新品骨架屏載入狀態
-              Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="space-y-4">
-                  <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-2xl animate-pulse" />
-                  <div className="space-y-2">
-                    <div className="h-5 bg-slate-100 dark:bg-slate-800 rounded animate-pulse w-3/4" />
-                    <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded animate-pulse w-1/2" />
-                  </div>
-                </div>
-              ))
-            : // 實際資料渲染
-              (arrivals || [])?.map((item) => (
-                <Link
-                  key={item.id}
-                  href={`/product/${item.id}`}
-                  className="group block space-y-4"
-                >
-                  <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-2xl overflow-hidden relative shadow-sm transition-all group-hover:shadow-xl group-hover:shadow-orange-500/10">
-                    <Image
-                      /* 防呆：如果 item.image_url 沒有第 0 個元素，則使用佔位圖 */
-                      src={item.image_url?.[0] || PLACEHOLDER_IMAGE}
-                      alt={item.name || "商品圖片"}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <h3 className="font-bold leading-none text-lg group-hover:text-orange-500 transition-colors">
-                      {item.name}
-                    </h3>
-                    <p className="text-sm text-slate-500">{item.category}</p>
-                    <p className="font-bold text-xl text-orange-500 pt-1">
-                      ${item.price}
-                    </p>
-                  </div>
-                </Link>
-              ))}
+          {arrivals?.map((item) => (
+            <Link key={item.id} href={`/product/${item.id}`} className="group block space-y-4">
+              <div className="aspect-square bg-slate-100 rounded-2xl overflow-hidden relative">
+                <Image src={item.image_url?.[0] || PLACEHOLDER_IMAGE} alt={item.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 640px) 100vw, 25vw" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-bold text-lg">{item.name}</h3>
+                <p className="text-sm text-slate-500">{item.category}</p>
+                <p className="font-bold text-xl text-orange-500">${item.price}</p>
+              </div>
+            </Link>
+          ))}
         </div>
       </section>
     </div>

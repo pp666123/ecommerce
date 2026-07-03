@@ -7,7 +7,10 @@ interface ApiResponse<T> {
   };
 }
 
-async function fetcher<T>(url: string, options?: RequestInit): Promise<T> {
+async function fetcher<T>(path: string, options?: RequestInit): Promise<T> {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
+  const url = `${baseUrl}${path}`;
+
   const res = await fetch(url, {
     ...options,
     headers: {

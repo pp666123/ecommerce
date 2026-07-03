@@ -1,35 +1,25 @@
-"use client";
-
-import { use } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import ImageContent from "@/components/product/imageContent";
 import TextContent from "@/components/product/textContent";
-// 🔥 引入你寫好的單一商品查詢 Hook (請確認路徑是否符合你的專案結構)
-import { useProductById } from "@/hooks/useProducts";
+// 🔥 改為匯入直接獲取資料的 API 函式
+import { productApi } from "@/services/api"; 
 
-export default function ProductDetailPage({
+export default async function ProductDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   // 1. 解開網址列參數的 Promise
-  const { id } = use(params);
+  const { id } = await params;
 
-  // 2. 透過 Hook 呼叫 API 取得商品資料
-  const { data: product, isLoading, isError } = useProductById(Number(id));
+  // 2. 直接在 Server 端獲取資料
+  // 這裡不需要 isLoading 與 isError 的 Hooks，直接呼叫 API
+  // 若請求失敗，Next.js 會直接拋出錯誤並進入 error.tsx (如果有的話)
+  const product = await productApi.getById(Number(id));
 
-  // 3. 處理載入中畫面
-  if (isLoading) {
-    return (
-      <div className="w-full h-[60vh] flex items-center justify-center text-slate-500">
-        商品資料載入中...
-      </div>
-    );
-  }
-
-  // 4. 處理找不到商品或發生錯誤的畫面
-  if (isError || !product) {
+  // 3. 處理找不到商品的情況
+  if (!product) {
     return (
       <div className="w-full h-[60vh] flex flex-col items-center justify-center text-slate-500">
         <p className="mb-4 text-lg font-medium text-slate-700">找不到該商品</p>
@@ -53,14 +43,14 @@ export default function ProductDetailPage({
         </Link>
       </div>
 
-      {/* 複用你原本完美的 Women 區塊排版 */}
+      {/* 複用你原本完美的排版 */}
       <div className="w-full flex flex-col md:flex-row items-center gap-12 lg:gap-24">
-        {/* 左側：圖片輪播 (ImageContent) */}
+        {/* 左側：圖片輪播 */}
         <div className="w-full flex-1 max-w-2xl">
           <ImageContent {...product} />
         </div>
 
-        {/* 右側：文字與購買操作區 ProductDetailPage(TextContent) */}
+        {/* 右側：文字與購買操作區 */}
         <div className="w-full flex-1 flex flex-col justify-center px-4 md:px-0 max-w-xl">
           <TextContent {...product} />
         </div>
