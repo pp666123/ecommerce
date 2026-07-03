@@ -10,6 +10,8 @@ import { productApi, categoryApi } from "@/services/api";
 
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1560393464-5c69a73c5770?auto=format&fit=crop&q=80&w=800";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   // 1. 同時並行獲取所有首頁需要的資料
   const [categories, featured, arrivals] = await Promise.all([
