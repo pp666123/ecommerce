@@ -11,6 +11,7 @@ test.describe("結帳頁面完整功能與分支測試", () => {
       .click();
 
     await page.getByRole("button", { name: "加入購物車" }).first().click();
+
     await page.locator("button:has(.lucide-shopping-cart)").click();
     await page.getByRole("button", { name: "前往結帳" }).click();
     await expect(page).toHaveURL(/.*checkout/);
@@ -18,7 +19,7 @@ test.describe("結帳頁面完整功能與分支測試", () => {
 
   test("測試一：購物車數量增減、刪除商品與空購物車阻擋", async ({ page }) => {
     // 測試增加數量 (+)
-    const plusBtn = page.locator("button:has(.lucide-plus)");
+      const plusBtn = page.locator("button:has(.lucide-plus)");
     await plusBtn.click();
 
     // 測試減少數量 (-)
@@ -47,6 +48,13 @@ test.describe("結帳頁面完整功能與分支測試", () => {
     // 切換物流：7-11
     await page.getByRole("button", { name: /7-11 超商取貨/ }).click();
 
+    await expect(
+      page
+        .locator("text=運費 (超商)")
+        .locator("..")
+        .locator("span.font-medium.text-zinc-900"),
+    ).toContainText("$10");
+
     // 發票：個人發票 -> 點擊紙本 -> 點擊會員 -> 點擊手機條碼
     await page.getByRole("button", { name: "個人發票" }).click();
     await page.getByRole("button", { name: "紙本發票" }).click();
@@ -62,7 +70,6 @@ test.describe("結帳頁面完整功能與分支測試", () => {
 
     // 送出
     await page.getByRole("button", { name: "確認付款" }).click();
-    await page.waitForTimeout(1000);
     await expect(page).toHaveURL(/.*order-success/);
   });
 

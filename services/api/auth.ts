@@ -29,6 +29,7 @@ export interface UserProfile {
   id: number;
   username: string;
   email: string;
+  default_carrier_code:string;
 }
 
 export const authApi = {

@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/store/useCartStore";
+import { useAuthStore } from "@/store/useAuthStore";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -30,20 +31,20 @@ export default function CheckoutPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 結帳狀態
+  const { user, getUser } = useAuthStore();
+
   const [logistics, setLogistics] = useState<"home" | "711" | "family">("home");
   const [payment, setPayment] = useState<"credit_card" | "line_pay">(
     "credit_card",
   );
 
-  // 發票狀態
   const [invoiceType, setInvoiceType] = useState<"personal" | "company">(
     "personal",
   );
+
   const [carrierType, setCarrierType] = useState<"member" | "mobile" | "paper">(
-    "member",
+    "mobile",
   );
-  // 同收件人地址狀態
   const [isSameAsShipping, setIsSameAsShipping] = useState(false);
 
   const cartData = useCartStore((state) => state.cartData);
@@ -52,11 +53,17 @@ export default function CheckoutPage() {
   const updateAmount = useCartStore((state) => state.updateAmount);
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
+    const initData = async () => {
+      const currentUser = await getUser();
+      if (currentUser) {
+        setCarrierType("member");
+      } else {
+        setCarrierType("mobile");
+      }
       setIsMounted(true);
-    }, 0);
-    return () => clearTimeout(timeoutId);
-  }, []);
+    };
+    initData();
+  }, [getUser]);
 
   const { subtotal, shippingFee, orderTotal } = useMemo(() => {
     const sub = cartData.reduce(
@@ -81,16 +88,22 @@ export default function CheckoutPage() {
 
     setIsSubmitting(true);
 
-    // 1. 取得表單數據
     const formElement = e.currentTarget;
     const formData = new FormData(formElement);
 
-    // 2. 構建嚴格符合 CreateOrderPayload 型別的物件
+    // 🔥 JS 端的雙重卡控防線 (確保如果繞過 HTML 驗證，這裡還能擋下)
+    const phone = String(formData.get("shipping_phone") || "");
+    if (!/^09\d{8}$/.test(phone)) {
+      toast.error("手機號碼格式錯誤", { description: "請輸入有效的 10 碼手機號碼" });
+      setIsSubmitting(false);
+      return;
+    }
+
     const payload: CreateOrderPayload = {
       email: String(formData.get("email") || ""),
       logistics: logistics,
       shipping_name: String(formData.get("shipping_name") || ""),
-      shipping_phone: String(formData.get("shipping_phone") || ""),
+      shipping_phone: phone,
       shipping_address: String(formData.get("shipping_address") || ""),
       order_remark: formData.get("order_remark")
         ? String(formData.get("order_remark"))
@@ -99,10 +112,12 @@ export default function CheckoutPage() {
       invoice_type: invoiceType,
       carrier_type: invoiceType === "personal" ? carrierType : undefined,
       carrier_code:
-        invoiceType === "personal" &&
-        carrierType === "mobile" &&
-        formData.get("carrier_code")
-          ? String(formData.get("carrier_code"))
+        invoiceType === "personal"
+          ? carrierType === "mobile" && formData.get("carrier_code")
+            ? String(formData.get("carrier_code")).toUpperCase() // 強制轉大寫再送出
+            : carrierType === "member" && user?.default_carrier_code
+              ? user.default_carrier_code
+              : undefined
           : undefined,
       company_tax_id:
         invoiceType === "company" && formData.get("company_tax_id")
@@ -133,7 +148,6 @@ export default function CheckoutPage() {
     };
 
     try {
-      // 3. 呼叫 API
       await orderApi.create(payload);
 
       toast.success("訂單建立成功！", {
@@ -183,7 +197,6 @@ export default function CheckoutPage() {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-12 lg:gap-20">
-        {/* ================= 左欄：表單區域 ================= */}
         <div className="flex-1 lg:max-w-[60%] w-full">
           <h1 className="text-3xl font-bold mb-8 text-zinc-900 dark:text-white">
             結帳
@@ -204,9 +217,10 @@ export default function CheckoutPage() {
                   電子郵件
                 </label>
                 <input
-                  name="email" // 🔥 補上 name
+                  name="email"
                   type="email"
                   required
+                  defaultValue={user?.email || ""}
                   className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 focus:ring-2 focus:ring-black outline-none transition-all"
                   placeholder="hello@gmail.com"
                 />
@@ -281,8 +295,9 @@ export default function CheckoutPage() {
                     收件人姓名
                   </label>
                   <input
-                    name="shipping_name" // 🔥 補上 name
+                    name="shipping_name"
                     required
+                    maxLength={20} // 🔥 避免惡意長字串
                     type="text"
                     className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 focus:ring-2 focus:ring-black outline-none transition-all"
                     placeholder="王大明"
@@ -293,9 +308,12 @@ export default function CheckoutPage() {
                     聯絡電話
                   </label>
                   <input
-                    name="shipping_phone" // 🔥 補上 name
+                    name="shipping_phone"
                     required
                     type="tel"
+                    maxLength={10}
+                    pattern="^09\d{8}$" // 🔥 嚴格限制 09 開頭的 10 碼數字
+                    title="請輸入 10 碼手機號碼，例如: 0912345678"
                     className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 focus:ring-2 focus:ring-black outline-none transition-all"
                     placeholder="0912345678"
                   />
@@ -306,8 +324,9 @@ export default function CheckoutPage() {
                   {logistics === "home" ? "詳細地址" : "超商門市名稱 / 店號"}
                 </label>
                 <input
-                  name="shipping_address" // 🔥 補上 name
+                  name="shipping_address"
                   required
+                  maxLength={100}
                   type="text"
                   className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 focus:ring-2 focus:ring-black outline-none transition-all"
                   placeholder={
@@ -323,8 +342,9 @@ export default function CheckoutPage() {
                   訂單備註 (選填)
                 </label>
                 <textarea
-                  name="order_remark" // 🔥 補上 name
+                  name="order_remark"
                   rows={3}
+                  maxLength={250} // 🔥 防呆
                   className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 focus:ring-2 focus:ring-black outline-none transition-all resize-none"
                   placeholder="有什麼想告訴我們的嗎？ (例如：請在平日白天送達)"
                 ></textarea>
@@ -364,25 +384,26 @@ export default function CheckoutPage() {
                 </button>
               </div>
 
-              {/* 個人發票：選擇載具 */}
               {invoiceType === "personal" && (
                 <div className="space-y-4 p-5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 animate-in fade-in slide-in-from-top-2">
                   <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                     選擇載具類型
                   </label>
                   <div className="grid grid-cols-3 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setCarrierType("member")}
-                      className={cn(
-                        "py-2 px-1 text-sm rounded-lg border transition-all font-medium",
-                        carrierType === "member"
-                          ? "border-black bg-black text-white dark:bg-white dark:text-black"
-                          : "border-zinc-200 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800",
-                      )}
-                    >
-                      會員載具
-                    </button>
+                    {user && (
+                      <button
+                        type="button"
+                        onClick={() => setCarrierType("member")}
+                        className={cn(
+                          "py-2 px-1 text-sm rounded-lg border transition-all font-medium",
+                          carrierType === "member"
+                            ? "border-black bg-black text-white dark:bg-white dark:text-black"
+                            : "border-zinc-200 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800",
+                        )}
+                      >
+                        會員載具
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => setCarrierType("mobile")}
@@ -408,19 +429,33 @@ export default function CheckoutPage() {
                       紙本發票
                     </button>
                   </div>
+
+                  {carrierType === "member" && user?.default_carrier_code && (
+                    <div className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+                      發票將自動儲存至您的預設載具：
+                      <span className="font-mono text-zinc-700 dark:text-zinc-300 ml-1">
+                        {user.default_carrier_code}
+                      </span>
+                    </div>
+                  )}
+
                   {carrierType === "mobile" && (
                     <input
-                      name="carrier_code" // 🔥 補上 name
+                      name="carrier_code"
                       required
                       type="text"
-                      className="w-full mt-3 px-4 py-3 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 focus:ring-2 focus:ring-black outline-none text-sm"
+                      maxLength={8}
+                      pattern="^\/[0-9A-Za-z.\-+]{7}$" // 🔥 嚴格規範台灣手機條碼格式
+                      title="格式錯誤，手機條碼需為 / 開頭並加上 7 碼英數字"
+                      defaultValue={user?.default_carrier_code || ""}
+                      className="w-full mt-3 px-4 py-3 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 focus:ring-2 focus:ring-black outline-none text-sm font-mono uppercase" // 🔥 uppercase 讓輸入自動顯示大寫
                       placeholder="請輸入手機條碼 (如: /AB12345)"
+                      style={{ textTransform: "uppercase" }}
                     />
                   )}
                 </div>
               )}
 
-              {/* 公司發票：輸入統編、抬頭與地址 */}
               {invoiceType === "company" && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 animate-in fade-in slide-in-from-top-2">
                   <div className="space-y-2">
@@ -428,10 +463,12 @@ export default function CheckoutPage() {
                       統一編號
                     </label>
                     <input
-                      name="company_tax_id" // 🔥 補上 name
+                      name="company_tax_id"
                       required
                       type="text"
                       maxLength={8}
+                      pattern="^\d{8}$" // 🔥 嚴格卡控 8 碼數字
+                      title="請輸入 8 碼公司統編數字"
                       className="w-full px-4 py-3 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 focus:ring-2 focus:ring-black outline-none text-sm"
                       placeholder="8碼數字"
                     />
@@ -441,15 +478,15 @@ export default function CheckoutPage() {
                       公司抬頭
                     </label>
                     <input
-                      name="company_name" // 🔥 補上 name
+                      name="company_name"
                       required
+                      maxLength={50}
                       type="text"
                       className="w-full px-4 py-3 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 focus:ring-2 focus:ring-black outline-none text-sm"
                       placeholder="公司名稱"
                     />
                   </div>
 
-                  {/* 🔥 加入同收件人地址功能 */}
                   <div className="space-y-2 md:col-span-2">
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
@@ -470,9 +507,10 @@ export default function CheckoutPage() {
                       </label>
                     </div>
                     <input
-                      name="invoice_address" // 🔥 補上 name
+                      name="invoice_address"
                       required={!isSameAsShipping}
                       disabled={isSameAsShipping}
+                      maxLength={100}
                       type="text"
                       className={cn(
                         "w-full px-4 py-3 rounded-lg outline-none text-sm transition-all",
@@ -554,10 +592,11 @@ export default function CheckoutPage() {
               {payment === "credit_card" && (
                 <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 relative overflow-hidden animate-in fade-in slide-in-from-top-2">
                   <div className="space-y-3">
-                    {/* 這裡不用加上 name，因為這些是假欄位 */}
                     <input
                       required
                       type="text"
+                      maxLength={19}
+                      pattern="[\d\s]{16,19}" // 🔥 簡易防呆
                       className="w-full px-4 py-3 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 focus:ring-2 focus:ring-black outline-none text-sm"
                       placeholder="卡號 (1234 5678 9101 1121)"
                     />
@@ -565,12 +604,16 @@ export default function CheckoutPage() {
                       <input
                         required
                         type="text"
+                        maxLength={5}
+                        pattern="\d{2}\/\d{2}"
                         className="w-full px-4 py-3 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 focus:ring-2 focus:ring-black outline-none text-sm"
                         placeholder="到期日 (MM/YY)"
                       />
                       <input
                         required
                         type="text"
+                        maxLength={4}
+                        pattern="\d{3,4}"
                         className="w-full px-4 py-3 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 focus:ring-2 focus:ring-black outline-none text-sm"
                         placeholder="安全碼 (CVC)"
                       />
