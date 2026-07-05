@@ -31,6 +31,7 @@ export default function RootLayout({
     <html lang="en" className={cn("font-sans", inter.variable)}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
         <Toaster position="top-center" richColors />
         <div className="flex flex-col w-full items-center justify-center bg-zinc-50 font-sans dark:bg-black">
