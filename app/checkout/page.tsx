@@ -331,8 +331,8 @@ export default function CheckoutPage() {
                   className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 focus:ring-2 focus:ring-black outline-none transition-all"
                   placeholder={
                     logistics === "home"
-                      ? "信義區市府路 1 號"
-                      : "信義門市 / 123456"
+                      ? "台北市信義區市府路 1 號"
+                      : "台北市信義門市 / 123456"
                   }
                 />
               </div>
@@ -346,7 +346,7 @@ export default function CheckoutPage() {
                   rows={3}
                   maxLength={250} // 🔥 防呆
                   className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 focus:ring-2 focus:ring-black outline-none transition-all resize-none"
-                  placeholder="有什麼想告訴我們的嗎？ (例如：請在平日白天送達)"
+                  placeholder="有什麼想告訴我們的嗎？ "
                 ></textarea>
               </div>
             </section>
