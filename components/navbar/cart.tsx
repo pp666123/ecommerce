@@ -61,6 +61,7 @@ export default function CartCom() {
           className="cursor-pointer h-12 w-12 relative rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
           variant="ghost"
           size="icon"
+          aria-label="購物車"
         >
           <ShoppingCartIcon className="size-[25px] text-zinc-800 dark:text-zinc-200" />
           {!cartIsEmpty && (

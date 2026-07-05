@@ -4,7 +4,6 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import Navbar from "@/components/navbar";
 import { Toaster } from "@/components/ui/sonner";
-import Providers from "./providers";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -45,7 +44,7 @@ export default function RootLayout({
 
           {/* 移除了 pt-0 md:pt-16，讓內容直接貼齊上方 */}
           <main className="flex min-h-full w-full flex-col items-center justify-between px-0 md:px-8 bg-white dark:bg-black sm:items-start">
-            <Providers>{children}</Providers>
+            {children}
           </main>
         </div>
       </body>
