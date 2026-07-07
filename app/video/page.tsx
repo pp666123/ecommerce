@@ -28,7 +28,7 @@ export default function VideoPage() {
 
   if (isLoading || !isInitialized) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-zinc-950">
+      <div className="w-full min-h-screen flex items-center justify-center bg-white dark:bg-zinc-950">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black dark:border-white"></div>
       </div>
     );
@@ -36,7 +36,7 @@ export default function VideoPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-900 p-4">
+      <div className="w-full min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-900 p-4">
         {/* 未登入的鎖頭畫面 */}
         <div className="text-center max-w-md w-full bg-white dark:bg-zinc-950 p-8 rounded-3xl shadow-xl border border-zinc-200 dark:border-zinc-800">
           <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -49,7 +49,7 @@ export default function VideoPage() {
             您必須登入後才能觀看本區的獨家影音內容。
           </p>
           <Link
-            href="/auth/login"
+            href="/login"
             className="w-full inline-flex justify-center items-center px-6 py-3 bg-black text-white dark:bg-white dark:text-black font-medium rounded-full hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors"
           >
             立即登入

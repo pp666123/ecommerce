@@ -22,7 +22,7 @@ export interface ResetPasswordPayload {
 }
 
 export interface GoogleLoginPayload {
-  credential: string;
+  accessToken: string;
 }
 
 export interface UserProfile {
