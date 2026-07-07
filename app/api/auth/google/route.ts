@@ -4,22 +4,44 @@ import { SignJWT } from "jose";
 
 export async function POST(req: Request) {
   try {
-    const { credential } = await req.json();
+    // 1. 接收前端傳來的 accessToken (記得型別定義要跟著改成 accessToken)
+    const { accessToken } = await req.json();
 
-    // 1. 直接呼叫 Google 官方 API 驗證
+    if (!accessToken) {
+      return fail("BAD_REQUEST", "缺少 Google 授權憑證");
+    }
+
+    // 2. 拿著 accessToken 去呼叫 Google UserInfo API 獲取使用者資料
     const res = await fetch(
-      `https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`,
+      "https://www.googleapis.com/oauth2/v3/userinfo",
+      {
+        headers: {
+          // 必須將 token 放在 Authorization Header 中
+          Authorization: `Bearer ${accessToken}`, 
+        },
+      }
     );
+
     const payload = await res.json();
 
-    if (!res.ok || payload.aud !== process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
-      // 替換為統一錯誤格式
-      return fail("UNAUTHORIZED", "Google 驗證失敗");
+    // 如果 Token 無效或已過期，Google 會回傳錯誤狀態碼
+    if (!res.ok) {
+      console.error("Google UserInfo Error:", payload);
+      return fail("UNAUTHORIZED", "Google 驗證失敗或授權已過期");
     }
 
     const { email, name } = payload;
 
-    // 2. 資料庫邏輯 (查詢或建立)
+    // 確保有拿到 email 作為資料庫的 Unique Key
+    if (!email) {
+      return fail("BAD_REQUEST", "無法獲取 Google 帳號的電子郵件");
+    }
+
+    // ==========================================
+    // 以下邏輯完全維持你原本完美的寫法，原封不動！
+    // ==========================================
+
+    // 3. 資料庫邏輯 (查詢或建立)
     const result = await pool.query(
       `INSERT INTO users (username, email, provider, is_verified)
          VALUES ($1, $2, 'google', TRUE)
@@ -30,7 +52,7 @@ export async function POST(req: Request) {
     );
     const user = result.rows[0];
 
-    // 3. 簽發 JWT
+    // 4. 簽發 JWT
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
     const token = await new SignJWT({
       id: user.id,
@@ -42,8 +64,7 @@ export async function POST(req: Request) {
       .setExpirationTime("7d")
       .sign(secret);
 
-    // 4. 回傳 Response 並設定 Cookie
-    // 使用 ok 建立回應物件，以便後續掛載 cookie
+    // 5. 回傳 Response 並設定 Cookie
     const response = ok({ message: "Google 登入成功" });
     response.cookies.set("auth_token", token, {
       httpOnly: true,
@@ -56,7 +77,6 @@ export async function POST(req: Request) {
     return response;
   } catch (error) {
     console.error("API Auth Error:", error);
-    // 替換為統一錯誤格式
     return fail("INTERNAL_ERROR", "伺服器內部錯誤");
   }
 }
